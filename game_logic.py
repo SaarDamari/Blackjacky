@@ -1,11 +1,11 @@
 import random
 
-# נגדיר את הצורות והערכים כקבועים
+# Card suits and ranks constants for the deck
 SUITS = ['♠', '♥', '♦', '♣']  # Spades, Hearts, Diamonds, Clubs
 RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
 
 class Card:
-    """מייצג קלף בודד"""
+    """Represents a single playing card with rank and suit."""
     def __init__(self, rank, suit):
         self.rank = rank
         self.suit = suit
@@ -28,7 +28,7 @@ class Card:
         return f"{self.rank}{self.suit}"
 
     def get_value(self):
-        """מחזיר את ערך הקלף (בלאק ג'ק)"""
+        """Returns Blackjack value (J/Q/K=10, A=11)."""
         if self.rank in ['J', 'Q', 'K']:
             return 10
         elif self.rank == 'A':
@@ -37,13 +37,13 @@ class Card:
             return int(self.rank)
 
 class Deck:
-    """מייצג חבילת קלפים"""
+    """Manages a 52-card deck with shuffle and deal operations."""
     def __init__(self):
         self.cards = []
         self.reset() # יצירת חבילה חדשה
 
     def reset(self):
-        """יוצר חבילה חדשה של 52 קלפים ומערבב"""
+        """Creates fresh 52-card deck and shuffles it."""
         self.cards = [Card(rank, suit) for suit in SUITS for rank in RANKS]
         self.shuffle()
 
@@ -51,7 +51,7 @@ class Deck:
         random.shuffle(self.cards)
 
     def deal(self):
-        """שולף קלף אחד מהחבילה"""
+        """Draws and returns one card from the deck."""
         if len(self.cards) > 0:
             return self.cards.pop()
         return None

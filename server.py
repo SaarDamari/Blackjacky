@@ -14,7 +14,7 @@ ANIMATION_DELAY = 0.8      # Delay for card reveal effect
 ROUND_COOLDOWN = 2.0       # Delay between rounds
 
 def log(msg):
-    """Helper for thread-safe logging with timestamps."""
+    """Prints timestamped log messages with thread name for debugging."""
     t = datetime.datetime.now().strftime("%H:%M:%S.%f")[:-3]
     t_name = threading.current_thread().name
     print(f"[{t}] [{t_name}] {msg}")
@@ -208,7 +208,7 @@ class DynamicGameRoom:
 ROOM = DynamicGameRoom()
 
 def watchdog_loop():
-    """Background thread to detect and fix stuck games."""
+    """Monitors game state and resets barriers if threads get stuck."""
     log("[WATCHDOG] Started monitoring...")
     while True:
         time.sleep(5)
@@ -222,7 +222,7 @@ def watchdog_loop():
 
 # --- Network Handlers ---
 def udp_broadcast_thread(tcp_listening_port):
-    """Sends UDP offers every 1 second."""
+    """Broadcasts server availability via UDP for client discovery."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     
@@ -236,6 +236,7 @@ def udp_broadcast_thread(tcp_listening_port):
             time.sleep(1)
 
 def handle_client(sock, addr):
+    """Handles a single client connection - manages rounds and game flow."""
     my_id = threading.get_ident()
     log(f"[NET] Connection from {addr}")
     
@@ -380,6 +381,7 @@ def handle_client(sock, addr):
         except: pass
 
 def main():
+    """Entry point - starts watchdog, TCP server, and UDP broadcaster."""
     wd = threading.Thread(target=watchdog_loop, daemon=True)
     wd.start()
     

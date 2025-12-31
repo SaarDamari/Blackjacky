@@ -1,6 +1,6 @@
 import struct
 
-# --- Constants & Magic Numbers ---
+# Protocol constants for client-server communication
 MAGIC_COOKIE = 0xabcddcba
 MSG_OFFER = 0x02
 MSG_REQUEST = 0x03

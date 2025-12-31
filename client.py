@@ -52,7 +52,7 @@ class BlackjackClientGUI:
         self.network_thread.start()
 
     def setup_ui(self):
-        """Builds the GUI layout."""
+        """Creates the main window with dealer/player areas and buttons."""
         # Header
         header_frame = tk.Frame(self.root, bg='#0d4d0d', pady=20)
         header_frame.pack(fill=tk.X)
@@ -101,7 +101,7 @@ class BlackjackClientGUI:
         tk.Button(self.root, text="🚪 QUIT", command=self.on_closing, bg='gray', fg='white').pack(side=tk.BOTTOM, pady=10)
 
     def check_gui_queue(self):
-        """Polls queue for UI updates from background threads."""
+        """Processes pending GUI updates from network threads safely."""
         while not self.gui_queue.empty():
             func, args = self.gui_queue.get()
             try: func(*args)
@@ -132,7 +132,7 @@ class BlackjackClientGUI:
         return data
 
     def udp_listener_loop(self):
-        """Listens for server offers on the fixed UDP port."""
+        """Waits for server broadcast offers and triggers connection dialog."""
         udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         
         try: 
@@ -167,6 +167,7 @@ class BlackjackClientGUI:
             except Exception: pass
 
     def show_rounds_dialog(self, name, ip, port):
+        """Prompts user to select number of rounds before connecting."""
         if self.is_playing or self.in_dialog: return
         
         self.in_dialog = True
@@ -182,6 +183,7 @@ class BlackjackClientGUI:
             self.in_dialog = False
 
     def game_session(self, ip, port, rounds):
+        """Manages TCP connection and plays the requested number of rounds."""
         try:
             self.tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.tcp_socket.settimeout(TCP_TIMEOUT) 
@@ -229,6 +231,7 @@ class BlackjackClientGUI:
             self.update_status("Looking for server...", "cyan")
 
     def play_round(self):
+        """Executes one round - receives cards, handles hit/stand, gets result."""
         print("\n--- NEW ROUND STARTED ---")
         
         print("[ROUND] Searching for SRT...")
@@ -309,6 +312,7 @@ class BlackjackClientGUI:
         return "ERROR"
 
     def set_action(self, action):
+        """Sets player decision (Hit/Stand) and signals the game thread."""
         self.user_action = action
         self.action_event.set()
 
@@ -316,6 +320,7 @@ class BlackjackClientGUI:
         self.run_on_main(self._draw_card, r, s, is_dealer)
 
     def _draw_card(self, rank, suit, is_dealer):
+        """Renders a card visually on the table canvas."""
         lst = self.dealer_cards if is_dealer else self.player_cards
         lst.append((rank, suit))
         frame = self.dealer_cards_frame if is_dealer else self.player_cards_frame
@@ -340,6 +345,7 @@ class BlackjackClientGUI:
         lbl.config(text=f"Value: {val}")
 
     def calc_val(self, cards):
+        """Calculates hand value with Ace soft/hard logic."""
         v, a = 0, 0
         for r, s in cards:
             if r==1: a+=1; v+=11
@@ -349,6 +355,7 @@ class BlackjackClientGUI:
         return v
 
     def clear_board(self):
+        """Removes all card widgets from the table for a new round."""
         for w in self.dealer_cards_frame.winfo_children(): w.destroy()
         for w in self.player_cards_frame.winfo_children(): w.destroy()
         self.dealer_value_label.config(text="Value: --")
@@ -367,6 +374,7 @@ class BlackjackClientGUI:
         except: pass
 
     def on_closing(self):
+        """Handles window close - cleans up socket and exits gracefully."""
         if messagebox.askokcancel("Quit", "Do you want to exit?"):
             self.running = False
             self.action_event.set()
